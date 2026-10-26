@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal Quote Reader</title>
+  <style>
+    /* High-contrast, minimal CSS variables */
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --subtext: #555555;
+      --border: #e2e2e2;
+      --card-bg: #fdfdfd;
+      --tag-bg: #f0f0f0;
+      --tag-text: #333333;
+      --accent: #111111;
+      --accent-text: #ffffff;
+      --code-bg: #f4f4f4;
+      --code-text: #222222;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a0a0a;
+      --text: #f0f0f0;
+      --subtext: #a0a0a0;
+      --border: #222222;
+      --card-bg: #111111;
+      --tag-bg: #1c1c1c;
+      --tag-text: #cccccc;
+      --accent: #f0f0f0;
+      --accent-text: #0a0a0a;
+      --code-bg: #161616;
+      --code-text: #e0e0e0;
+    }
+
+    /* Zero external dependencies - Native System Font Stack */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.5rem;
+    }
+
+    header {
+      max-width: 680px;
+      margin: 0 auto 2rem auto;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    /* Buttons & Controls */
+    .btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn:hover {
+      border-color: var(--text);
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    /* Quote Card Layout */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .quote-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    blockquote {
+      font-size: 1.5rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 1.5rem;
+      quotes: "“" "”" "‘" "’";
+    }
+
+    blockquote::before {
+      content: open-quote;
+    }
+
+    blockquote::after {
+      content: close-quote;
+    }
+
+    .author {
+      font-size: 0.95rem;
+      color: var(--subtext);
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+
+    .author::before {
+      content: "— ";
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      background-color: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Error & Status Box */
+    .status {
+      font-size: 0.85rem;
+      color: var(--subtext);
+    }
+
+    /* Config / Setup Section */
+    .config-section {
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .config-section details {
+      font-size: 0.85rem;
+    }
+
+    .config-section summary {
+      cursor: pointer;
+      color: var(--subtext);
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .config-section summary:hover {
+      color: var(--text);
+    }
+
+    .api-input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    input[type="text"]:focus {
+      outline: 1px solid var(--text);
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      padding: 0.8rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-mono: monospace;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+
+    footer {
+      max-width: 680px;
+      margin: 2rem auto 0 auto;
+      width: 100%;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--subtext);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Quote Terminal</h1>
+    <button id="theme-btn" class="btn" aria-label="Toggle Theme">Dark</button>
+  </header>
+
+  <main>
+    <article class="quote-card">
+      <blockquote id="quote-text">Loading quote...</blockquote>
+      <div id="quote-by" class="author">...</div>
+      <div id="quote-tags" class="tags"></div>
+    </article>
+
+    <div class="controls">
+      <span id="status-msg" class="status"></span>
+      <button id="next-btn" class="btn btn-primary">New Quote</button>
+    </div>
+
+  </main>
+
+  <footer>
+    Instant Quote Viewer • Ultra-lightweight & zero dependencies
+  </footer>
+
+  <script>
+    // ==========================================
+    // CONFIGURATION
+    // Change this to your live REST API endpoint
+    // ==========================================
+    let API_URL = '/api/quote'; // Fallback demo placeholder
+
+    // Fallback static quote if API is unreachable or during offline mode
+    const FALLBACK_QUOTE = {
+      quote: "Moments, when lost, can't be found again. They're just gone.",
+      by: "Jenny Han, The Summer I Turned Pretty",
+      tags: "bellys, love, missed-chances, romance"
+    };
+
+    // DOM Elements
+    const quoteTextEl = document.getElementById('quote-text');
+    const quoteByEl = document.getElementById('quote-by');
+    const quoteTagsEl = document.getElementById('quote-tags');
+    const statusMsgEl = document.getElementById('status-msg');
+    const themeBtn = document.getElementById('theme-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    // Load saved API endpoint from localStorage if present
+    // const savedApi = localStorage.getItem('custom_quote_api');
+    // if (savedApi) {
+    //   API_URL = savedApi;
+    // }
+    // apiUrlInput.value = API_URL;
+
+    // Theme Management (Instant, high-contrast)
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeBtn.textContent = savedTheme === 'dark' ? 'Light' : 'Dark';
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeBtn.textContent = 'Light';
+      }
+    }
+
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const newTheme = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    });
+
+    // Render Quote Object
+    function renderQuote(data) {
+      quoteTextEl.textContent = data.quote || 'No quote content provided.';
+      quoteByEl.textContent = data.by || 'Unknown';
+      
+      // Render comma-separated tags
+      quoteTagsEl.innerHTML = '';
+      if (data.tags) {
+        const tagList = data.tags.split(',').map(t => t.trim()).filter(Boolean);
+        tagList.forEach(tag => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.textContent = `#${tag}`;
+          quoteTagsEl.appendChild(span);
+        });
+      }
+    }
+
+    // Fetch Quote from API
+    async function fetchQuote() {
+      statusMsgEl.textContent = 'Fetching...';
+      nextBtn.disabled = true;
+
+      try {
+        const response = await fetch(API_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        
+        let data = await response.json();
+        
+        // Handle wrapper arrays if the API returns an array instead of single object
+        if (Array.isArray(data)) {
+          data = data[Math.floor(Math.random() * data.length)];
+        }
+
+        renderQuote(data);
+        statusMsgEl.textContent = '';
+      } catch (error) {
+        console.warn('API Fetch failed, displaying fallback quote:', error);
+        statusMsgEl.textContent = 'API connection error. Displaying fallback.';
+        renderQuote(FALLBACK_QUOTE);
+      } finally {
+        nextBtn.disabled = false;
+      }
+    }
+
+
+    nextBtn.addEventListener('click', fetchQuote);
+
+    // Initial load
+    initTheme();
+    fetchQuote();
+  </script>
+</body>
+</html>
