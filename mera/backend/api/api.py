@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 import csv
+import os
 from random import randint
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
